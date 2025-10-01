@@ -11,6 +11,7 @@ import ProductDetail from "@/pages/ProductDetail";
 import VendorDashboard from "@/pages/VendorDashboard";
 import VendorAnalytics from "@/pages/VendorAnalytics";
 import AdminDashboard from "@/pages/AdminDashboard";
+import Wishlist from "@/pages/Wishlist";
 
 function Router() {
   const { isLoading } = useAuth();
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/vendor-dashboard" component={VendorDashboard} />
       <Route path="/vendor-analytics" component={VendorAnalytics} />
       <Route path="/admin-dashboard" component={AdminDashboard} />
+      <Route path="/wishlist" component={Wishlist} />
       <Route component={NotFound} />
     </Switch>
   );

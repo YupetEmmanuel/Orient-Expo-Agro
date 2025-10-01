@@ -1,4 +1,8 @@
 import { Link } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Heart } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Product, Vendor } from "@shared/schema";
 
 interface ProductCardProps {
@@ -6,9 +10,61 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { user } = useAuth();
+
+  const { data: wishlistStatus } = useQuery<{ isInWishlist: boolean }>({
+    queryKey: ["/api/wishlist/check", product.id],
+    queryFn: async ({ queryKey }) => {
+      const [path, productId] = queryKey;
+      const res = await fetch(`${path}/${productId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to check wishlist");
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
+  const toggleWishlistMutation = useMutation({
+    mutationFn: async () => {
+      if (wishlistStatus?.isInWishlist) {
+        return await apiRequest("DELETE", `/api/wishlist/${product.id}`, {});
+      } else {
+        return await apiRequest("POST", "/api/wishlist", { productId: product.id });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/wishlist/check"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wishlist"] });
+    },
+  });
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (user) {
+      toggleWishlistMutation.mutate();
+    }
+  };
+
   return (
     <Link href={`/products/${product.id}`}>
-      <div className="card-hover bg-card rounded-xl shadow-md overflow-hidden border border-border cursor-pointer" data-testid={`card-product-${product.id}`}>
+      <div className="card-hover bg-card rounded-xl shadow-md overflow-hidden border border-border cursor-pointer relative" data-testid={`card-product-${product.id}`}>
+        {user && (
+          <button
+            onClick={handleWishlistClick}
+            className="absolute top-3 right-3 z-10 p-2 bg-background/80 rounded-full hover:bg-background transition-colors"
+            data-testid={`button-wishlist-${product.id}`}
+          >
+            <Heart
+              className={`w-5 h-5 ${
+                wishlistStatus?.isInWishlist
+                  ? "fill-red-500 text-red-500"
+                  : "text-muted-foreground"
+              }`}
+            />
+          </button>
+        )}
         {product.imageUrl ? (
           <img
             src={product.imageUrl}

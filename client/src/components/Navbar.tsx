@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Home, Store, LayoutDashboard, Shield } from "lucide-react";
+import { Home, Store, LayoutDashboard, Shield, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
@@ -72,6 +72,16 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
+                <Link href="/wishlist">
+                  <Button
+                    variant="ghost"
+                    className="hidden md:flex items-center space-x-2"
+                    data-testid="link-wishlist"
+                  >
+                    <Heart className="w-5 h-5" />
+                    <span>Wishlist</span>
+                  </Button>
+                </Link>
                 {user?.role === "vendor" && (
                   <Link href="/vendor-dashboard">
                     <Button

@@ -6,6 +6,7 @@ import {
   productViews,
   contactClicks,
   reviews,
+  wishlists,
   type User,
   type UpsertUser,
   type Vendor,
@@ -20,6 +21,8 @@ import {
   type ContactClick,
   type Review,
   type InsertReview,
+  type Wishlist,
+  type InsertWishlist,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, like, and, or } from "drizzle-orm";
@@ -81,6 +84,12 @@ export interface IStorage {
   createReview(review: InsertReview): Promise<Review>;
   getVendorReviews(vendorId: string): Promise<(Review & { userName: string })[]>;
   getVendorAverageRating(vendorId: string): Promise<number>;
+
+  // Wishlist operations
+  addToWishlist(data: InsertWishlist): Promise<Wishlist>;
+  removeFromWishlist(userId: string, productId: string): Promise<void>;
+  getUserWishlist(userId: string): Promise<(Wishlist & { product: Product; vendor: Vendor })[]>;
+  isInWishlist(userId: string, productId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -395,6 +404,51 @@ export class DatabaseStorage implements IStorage {
 
     const sum = vendorReviews.reduce((acc, r) => acc + parseFloat(r.rating), 0);
     return Math.round((sum / vendorReviews.length) * 10) / 10;
+  }
+
+  // Wishlist operations
+  async addToWishlist(data: InsertWishlist): Promise<Wishlist> {
+    const [wishlist] = await db.insert(wishlists).values(data).returning();
+    return wishlist;
+  }
+
+  async removeFromWishlist(userId: string, productId: string): Promise<void> {
+    await db
+      .delete(wishlists)
+      .where(and(eq(wishlists.userId, userId), eq(wishlists.productId, productId)));
+  }
+
+  async getUserWishlist(userId: string): Promise<(Wishlist & { product: Product; vendor: Vendor })[]> {
+    const userWishlist = await db
+      .select({
+        id: wishlists.id,
+        userId: wishlists.userId,
+        productId: wishlists.productId,
+        createdAt: wishlists.createdAt,
+        product: products,
+        vendor: vendors,
+      })
+      .from(wishlists)
+      .leftJoin(products, eq(wishlists.productId, products.id))
+      .leftJoin(vendors, eq(products.vendorId, vendors.id))
+      .where(eq(wishlists.userId, userId))
+      .orderBy(desc(wishlists.createdAt));
+
+    return userWishlist.map((w) => ({
+      ...w,
+      product: w.product!,
+      vendor: w.vendor!,
+    }));
+  }
+
+  async isInWishlist(userId: string, productId: string): Promise<boolean> {
+    const item = await db
+      .select()
+      .from(wishlists)
+      .where(and(eq(wishlists.userId, userId), eq(wishlists.productId, productId)))
+      .limit(1);
+
+    return item.length > 0;
   }
 }
 
