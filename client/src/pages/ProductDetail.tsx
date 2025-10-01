@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Phone, Mail, ArrowLeft } from "lucide-react";
 import type { Product, Vendor } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/products/:id");
@@ -14,6 +16,12 @@ export default function ProductDetail() {
     queryKey: ["/api/products", productId],
     enabled: !!productId,
   });
+
+  useEffect(() => {
+    if (productId) {
+      apiRequest("POST", "/api/analytics/product-view", { productId }).catch(console.error);
+    }
+  }, [productId]);
 
   const { data: vendor, isLoading: vendorLoading } = useQuery<Vendor>({
     queryKey: ["/api/vendors", product?.vendorId],
@@ -48,20 +56,35 @@ export default function ProductDetail() {
     );
   }
 
+  const trackContact = async (contactType: string) => {
+    if (!vendor?.id) return;
+    try {
+      await apiRequest("POST", "/api/analytics/contact-click", {
+        vendorId: vendor.id,
+        contactType,
+      });
+    } catch (error) {
+      console.error("Error tracking contact:", error);
+    }
+  };
+
   const handleCall = () => {
     if (vendor?.phone) {
+      trackContact("phone");
       window.location.href = `tel:${vendor.phone}`;
     }
   };
 
   const handleWhatsApp = () => {
     if (vendor?.whatsapp) {
+      trackContact("whatsapp");
       window.open(`https://wa.me/${vendor.whatsapp.replace(/\D/g, "")}`, "_blank");
     }
   };
 
   const handleEmail = () => {
     if (vendor?.email) {
+      trackContact("email");
       window.location.href = `mailto:${vendor.email}`;
     }
   };

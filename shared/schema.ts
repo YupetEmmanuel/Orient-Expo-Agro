@@ -136,3 +136,70 @@ export const insertProductSchema = createInsertSchema(products).omit({
 
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
+
+// Analytics - Product Views
+export const productViews = pgTable("product_views", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  productId: varchar("product_id")
+    .notNull()
+    .references(() => products.id),
+  userId: varchar("user_id").references(() => users.id),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const productViewsRelations = relations(productViews, ({ one }) => ({
+  product: one(products, {
+    fields: [productViews.productId],
+    references: [products.id],
+  }),
+  user: one(users, {
+    fields: [productViews.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertProductViewSchema = createInsertSchema(productViews).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertProductView = z.infer<typeof insertProductViewSchema>;
+export type ProductView = typeof productViews.$inferSelect;
+
+// Analytics - Contact Clicks
+export const contactClicks = pgTable("contact_clicks", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id")
+    .notNull()
+    .references(() => vendors.id),
+  contactType: varchar("contact_type").notNull(), // phone, whatsapp, email
+  userId: varchar("user_id").references(() => users.id),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const contactClicksRelations = relations(contactClicks, ({ one }) => ({
+  vendor: one(vendors, {
+    fields: [contactClicks.vendorId],
+    references: [vendors.id],
+  }),
+  user: one(users, {
+    fields: [contactClicks.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertContactClickSchema = createInsertSchema(contactClicks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertContactClick = z.infer<typeof insertContactClickSchema>;
+export type ContactClick = typeof contactClicks.$inferSelect;

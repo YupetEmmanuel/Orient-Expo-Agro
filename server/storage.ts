@@ -3,6 +3,8 @@ import {
   vendors,
   products,
   categories,
+  productViews,
+  contactClicks,
   type User,
   type UpsertUser,
   type Vendor,
@@ -11,6 +13,10 @@ import {
   type InsertProduct,
   type Category,
   type InsertCategory,
+  type ProductView,
+  type InsertProductView,
+  type InsertContactClick,
+  type ContactClick,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, like, and, or } from "drizzle-orm";
@@ -58,6 +64,15 @@ export interface IStorage {
   ): Promise<Product | undefined>;
   deleteProduct(id: string): Promise<void>;
   flagProduct(id: string, reason: string): Promise<Product | undefined>;
+
+  // Analytics operations
+  trackProductView(data: InsertProductView): Promise<ProductView>;
+  trackContactClick(data: InsertContactClick): Promise<ContactClick>;
+  getProductViewCount(productId: string): Promise<number>;
+  getVendorAnalytics(vendorId: string): Promise<{
+    productViews: { productId: string; productName: string; viewCount: number }[];
+    contactClicks: { contactType: string; clickCount: number }[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -148,8 +163,6 @@ export class DatabaseStorage implements IStorage {
     status?: string;
     categoryId?: string;
   }): Promise<Vendor[]> {
-    let query = db.select().from(vendors);
-
     const conditions = [];
     if (filters?.status && filters.status !== 'all') {
       conditions.push(eq(vendors.status, filters.status));
@@ -159,10 +172,14 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      return await db
+        .select()
+        .from(vendors)
+        .where(and(...conditions))
+        .orderBy(desc(vendors.createdAt));
     }
 
-    return await query.orderBy(desc(vendors.createdAt));
+    return await db.select().from(vendors).orderBy(desc(vendors.createdAt));
   }
 
   async createVendor(vendorData: InsertVendor): Promise<Vendor> {
@@ -209,8 +226,6 @@ export class DatabaseStorage implements IStorage {
     status?: string;
     search?: string;
   }): Promise<Product[]> {
-    let query = db.select().from(products);
-
     const conditions = [];
     if (filters?.vendorId) {
       conditions.push(eq(products.vendorId, filters.vendorId));
@@ -231,10 +246,14 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      return await db
+        .select()
+        .from(products)
+        .where(and(...conditions))
+        .orderBy(desc(products.createdAt));
     }
 
-    return await query.orderBy(desc(products.createdAt));
+    return await db.select().from(products).orderBy(desc(products.createdAt));
   }
 
   async createProduct(productData: InsertProduct): Promise<Product> {
@@ -265,6 +284,69 @@ export class DatabaseStorage implements IStorage {
       .where(eq(products.id, id))
       .returning();
     return product;
+  }
+
+  // Analytics operations
+  async trackProductView(data: InsertProductView): Promise<ProductView> {
+    const [view] = await db.insert(productViews).values(data).returning();
+    return view;
+  }
+
+  async trackContactClick(data: InsertContactClick): Promise<ContactClick> {
+    const [click] = await db.insert(contactClicks).values(data).returning();
+    return click;
+  }
+
+  async getProductViewCount(productId: string): Promise<number> {
+    const result = await db
+      .select()
+      .from(productViews)
+      .where(eq(productViews.productId, productId));
+    return result.length;
+  }
+
+  async getVendorAnalytics(vendorId: string): Promise<{
+    productViews: { productId: string; productName: string; viewCount: number }[];
+    contactClicks: { contactType: string; clickCount: number }[];
+  }> {
+    const vendorProducts = await db
+      .select()
+      .from(products)
+      .where(eq(products.vendorId, vendorId));
+
+    const productViewsData = await Promise.all(
+      vendorProducts.map(async (product) => {
+        const views = await db
+          .select()
+          .from(productViews)
+          .where(eq(productViews.productId, product.id));
+        return {
+          productId: product.id,
+          productName: product.name,
+          viewCount: views.length,
+        };
+      })
+    );
+
+    const clicks = await db
+      .select()
+      .from(contactClicks)
+      .where(eq(contactClicks.vendorId, vendorId));
+
+    const contactClicksData = clicks.reduce((acc, click) => {
+      const existing = acc.find((item) => item.contactType === click.contactType);
+      if (existing) {
+        existing.clickCount++;
+      } else {
+        acc.push({ contactType: click.contactType, clickCount: 1 });
+      }
+      return acc;
+    }, [] as { contactType: string; clickCount: number }[]);
+
+    return {
+      productViews: productViewsData,
+      contactClicks: contactClicksData,
+    };
   }
 }
 

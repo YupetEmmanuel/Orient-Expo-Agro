@@ -9,6 +9,7 @@ import Home from "@/pages/Home";
 import VendorProfile from "@/pages/VendorProfile";
 import ProductDetail from "@/pages/ProductDetail";
 import VendorDashboard from "@/pages/VendorDashboard";
+import VendorAnalytics from "@/pages/VendorAnalytics";
 import AdminDashboard from "@/pages/AdminDashboard";
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/vendors/:id" component={VendorProfile} />
       <Route path="/products/:id" component={ProductDetail} />
       <Route path="/vendor-dashboard" component={VendorDashboard} />
+      <Route path="/vendor-analytics" component={VendorAnalytics} />
       <Route path="/admin-dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>

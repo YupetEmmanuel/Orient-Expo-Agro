@@ -61,20 +61,39 @@ export default function VendorProfile() {
     .toUpperCase()
     .slice(0, 2);
 
+  const trackContact = async (contactType: string) => {
+    try {
+      await fetch("/api/analytics/contact-click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          vendorId,
+          contactType,
+        }),
+      });
+    } catch (error) {
+      console.error("Error tracking contact:", error);
+    }
+  };
+
   const handleCall = () => {
     if (vendor.phone) {
+      trackContact("phone");
       window.location.href = `tel:${vendor.phone}`;
     }
   };
 
   const handleWhatsApp = () => {
     if (vendor.whatsapp) {
+      trackContact("whatsapp");
       window.open(`https://wa.me/${vendor.whatsapp.replace(/\D/g, "")}`, "_blank");
     }
   };
 
   const handleEmail = () => {
     if (vendor.email) {
+      trackContact("email");
       window.location.href = `mailto:${vendor.email}`;
     }
   };

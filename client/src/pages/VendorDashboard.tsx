@@ -14,7 +14,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { UploadResult } from "@uppy/core";
 import type { Vendor, Product } from "@shared/schema";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, TrendingUp } from "lucide-react";
+import { Link } from "wouter";
 
 export default function VendorDashboard() {
   const { toast } = useToast();
@@ -230,9 +231,19 @@ export default function VendorDashboard() {
 
       <section className="py-16 bg-background flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">Vendor Dashboard</h2>
-            <p className="text-muted-foreground">Manage your store and products</p>
+          <div className="mb-8 flex justify-between items-start">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Vendor Dashboard</h2>
+              <p className="text-muted-foreground">Manage your store and products</p>
+            </div>
+            {vendor && (
+              <Link href="/vendor-analytics">
+                <Button variant="outline" data-testid="button-view-analytics">
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  View Analytics
+                </Button>
+              </Link>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

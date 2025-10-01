@@ -11,6 +11,8 @@ import {
   insertVendorSchema,
   insertProductSchema,
   insertCategorySchema,
+  insertContactClickSchema,
+  insertProductViewSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -357,6 +359,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error setting product image:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Analytics routes
+  app.post("/api/analytics/product-view", async (req, res) => {
+    try {
+      const validated = insertProductViewSchema.parse({
+        ...req.body,
+        userId: (req as any).user?.claims?.sub,
+        ipAddress: req.ip || req.socket.remoteAddress,
+        userAgent: req.get("user-agent"),
+      });
+
+      const view = await storage.trackProductView(validated);
+      res.json(view);
+    } catch (error) {
+      console.error("Error tracking product view:", error);
+      res.status(500).json({ message: "Failed to track product view" });
+    }
+  });
+
+  app.post("/api/analytics/contact-click", async (req, res) => {
+    try {
+      const validated = insertContactClickSchema.parse({
+        ...req.body,
+        userId: (req as any).user?.claims?.sub,
+        ipAddress: req.ip || req.socket.remoteAddress,
+        userAgent: req.get("user-agent"),
+      });
+
+      const click = await storage.trackContactClick(validated);
+      res.json(click);
+    } catch (error) {
+      console.error("Error tracking contact click:", error);
+      res.status(500).json({ message: "Failed to track contact click" });
+    }
+  });
+
+  app.get("/api/analytics/vendor/:vendorId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { vendorId } = req.params;
+      const userId = req.user.claims.sub;
+
+      const vendor = await storage.getVendor(vendorId);
+      if (!vendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
+
+      if (vendor.userId !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const analytics = await storage.getVendorAnalytics(vendorId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching vendor analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
     }
   });
 
