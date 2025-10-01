@@ -5,6 +5,7 @@ import {
   categories,
   productViews,
   contactClicks,
+  reviews,
   type User,
   type UpsertUser,
   type Vendor,
@@ -17,6 +18,8 @@ import {
   type InsertProductView,
   type InsertContactClick,
   type ContactClick,
+  type Review,
+  type InsertReview,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, like, and, or } from "drizzle-orm";
@@ -73,6 +76,11 @@ export interface IStorage {
     productViews: { productId: string; productName: string; viewCount: number }[];
     contactClicks: { contactType: string; clickCount: number }[];
   }>;
+
+  // Review operations
+  createReview(review: InsertReview): Promise<Review>;
+  getVendorReviews(vendorId: string): Promise<(Review & { userName: string })[]>;
+  getVendorAverageRating(vendorId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -347,6 +355,46 @@ export class DatabaseStorage implements IStorage {
       productViews: productViewsData,
       contactClicks: contactClicksData,
     };
+  }
+
+  // Review operations
+  async createReview(reviewData: InsertReview): Promise<Review> {
+    const [review] = await db.insert(reviews).values(reviewData).returning();
+    return review;
+  }
+
+  async getVendorReviews(vendorId: string): Promise<(Review & { userName: string })[]> {
+    const vendorReviews = await db
+      .select({
+        id: reviews.id,
+        vendorId: reviews.vendorId,
+        userId: reviews.userId,
+        rating: reviews.rating,
+        comment: reviews.comment,
+        createdAt: reviews.createdAt,
+        userName: users.firstName,
+      })
+      .from(reviews)
+      .leftJoin(users, eq(reviews.userId, users.id))
+      .where(eq(reviews.vendorId, vendorId))
+      .orderBy(desc(reviews.createdAt));
+
+    return vendorReviews.map((r) => ({
+      ...r,
+      userName: r.userName || "Anonymous",
+    }));
+  }
+
+  async getVendorAverageRating(vendorId: string): Promise<number> {
+    const vendorReviews = await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.vendorId, vendorId));
+
+    if (vendorReviews.length === 0) return 0;
+
+    const sum = vendorReviews.reduce((acc, r) => acc + parseFloat(r.rating), 0);
+    return Math.round((sum / vendorReviews.length) * 10) / 10;
   }
 }
 

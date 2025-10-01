@@ -13,6 +13,7 @@ import {
   insertCategorySchema,
   insertContactClickSchema,
   insertProductViewSchema,
+  insertReviewSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -416,6 +417,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching vendor analytics:", error);
       res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // Review routes
+  app.post("/api/reviews", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validated = insertReviewSchema.parse({
+        ...req.body,
+        userId,
+      });
+
+      const review = await storage.createReview(validated);
+      res.json(review);
+    } catch (error) {
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
+  app.get("/api/reviews/vendor/:vendorId", async (req, res) => {
+    try {
+      const { vendorId } = req.params;
+      const reviews = await storage.getVendorReviews(vendorId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  app.get("/api/reviews/vendor/:vendorId/average", async (req, res) => {
+    try {
+      const { vendorId } = req.params;
+      const average = await storage.getVendorAverageRating(vendorId);
+      res.json({ average });
+    } catch (error) {
+      console.error("Error fetching average rating:", error);
+      res.status(500).json({ message: "Failed to fetch average rating" });
     }
   });
 

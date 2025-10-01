@@ -1,15 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute } from "wouter";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail } from "lucide-react";
-import type { Vendor, Product } from "@shared/schema";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Phone, Mail, Star } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Vendor, Product, Review } from "@shared/schema";
 
 export default function VendorProfile() {
   const [, params] = useRoute("/vendors/:id");
   const vendorId = params?.id;
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
 
   const { data: vendor, isLoading: vendorLoading } = useQuery<Vendor>({
     queryKey: ["/api/vendors", vendorId],
@@ -24,6 +35,44 @@ export default function VendorProfile() {
       return res.json();
     },
     enabled: !!vendorId,
+  });
+
+  const { data: reviews = [] } = useQuery<(Review & { userName: string })[]>({
+    queryKey: ["/api/reviews/vendor", vendorId],
+    queryFn: async () => {
+      const res = await fetch(`/api/reviews/vendor/${vendorId}`);
+      if (!res.ok) throw new Error("Failed to fetch reviews");
+      return res.json();
+    },
+    enabled: !!vendorId,
+  });
+
+  const { data: averageRating = 0 } = useQuery<number>({
+    queryKey: ["/api/reviews/vendor", vendorId, "average"],
+    queryFn: async () => {
+      const res = await fetch(`/api/reviews/vendor/${vendorId}/average`);
+      if (!res.ok) throw new Error("Failed to fetch average rating");
+      const data = await res.json();
+      return data.average;
+    },
+    enabled: !!vendorId,
+  });
+
+  const createReviewMutation = useMutation({
+    mutationFn: async (data: { vendorId: string; rating: string; comment: string }) => {
+      return await apiRequest("POST", "/api/reviews", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reviews/vendor", vendorId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reviews/vendor", vendorId, "average"] });
+      toast({ title: "Success", description: "Review submitted successfully" });
+      setShowReviewForm(false);
+      setComment("");
+      setRating(5);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to submit review", variant: "destructive" });
+    },
   });
 
   if (vendorLoading) {
@@ -169,7 +218,119 @@ export default function VendorProfile() {
               </div>
               <div className="text-sm text-muted-foreground">Products</div>
             </div>
+            <div className="bg-card rounded-lg border border-border p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                <div className="text-3xl font-bold text-primary" data-testid="text-average-rating">
+                  {averageRating.toFixed(1)}
+                </div>
+              </div>
+              <div className="text-sm text-muted-foreground">{reviews.length} Reviews</div>
+            </div>
           </div>
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Customer Reviews</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {user && (
+                <div className="mb-6">
+                  {!showReviewForm ? (
+                    <Button onClick={() => setShowReviewForm(true)} data-testid="button-add-review">
+                      Write a Review
+                    </Button>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Rating</label>
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setRating(star)}
+                              data-testid={`button-rating-${star}`}
+                            >
+                              <Star
+                                className={`w-8 h-8 ${
+                                  star <= rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Comment (optional)</label>
+                        <Textarea
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          placeholder="Share your experience..."
+                          rows={4}
+                          data-testid="textarea-review-comment"
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => {
+                            createReviewMutation.mutate({
+                              vendorId: vendorId!,
+                              rating: rating.toString(),
+                              comment,
+                            });
+                          }}
+                          disabled={createReviewMutation.isPending}
+                          data-testid="button-submit-review"
+                        >
+                          {createReviewMutation.isPending ? "Submitting..." : "Submit Review"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowReviewForm(false);
+                            setComment("");
+                            setRating(5);
+                          }}
+                          data-testid="button-cancel-review"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {reviews.length === 0 ? (
+                  <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
+                ) : (
+                  reviews.map((review) => (
+                    <div key={review.id} className="border-b border-border pb-4 last:border-0" data-testid={`review-${review.id}`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="font-semibold">{review.userName}</div>
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < parseFloat(review.rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      {review.comment && <p className="text-muted-foreground">{review.comment}</p>}
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           <div>
             <h3 className="text-2xl font-bold mb-6">Products from {vendor.storeName}</h3>

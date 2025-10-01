@@ -203,3 +203,38 @@ export const insertContactClickSchema = createInsertSchema(contactClicks).omit({
 
 export type InsertContactClick = z.infer<typeof insertContactClickSchema>;
 export type ContactClick = typeof contactClicks.$inferSelect;
+
+// Reviews and Ratings
+export const reviews = pgTable("reviews", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  vendorId: varchar("vendor_id")
+    .notNull()
+    .references(() => vendors.id),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id),
+  rating: decimal("rating", { precision: 2, scale: 1 }).notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  vendor: one(vendors, {
+    fields: [reviews.vendorId],
+    references: [vendors.id],
+  }),
+  user: one(users, {
+    fields: [reviews.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
