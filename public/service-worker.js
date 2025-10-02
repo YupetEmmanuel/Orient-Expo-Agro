@@ -5,6 +5,7 @@ const RUNTIME_CACHE = 'orient-runtime-v1';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
+  '/icon.svg',
   '/icon-192.png',
   '/icon-512.png',
 ];
