@@ -44,6 +44,7 @@ export interface IStorage {
   // Question operations
   getQuestion(id: string): Promise<Question | undefined>;
   getAllQuestions(): Promise<Question[]>;
+  searchQuestions(query: string): Promise<Question[]>;
   createQuestion(question: InsertQuestion): Promise<Question>;
   deleteQuestion(id: string): Promise<void>;
 
@@ -188,6 +189,33 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(questions)
+      .orderBy(desc(questions.createdAt));
+  }
+
+  async searchQuestions(query: string): Promise<Question[]> {
+    // Extract keywords from the search query
+    const keywords = query
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(word => word.length > 2); // Filter out short words like "to", "a", etc.
+
+    if (keywords.length === 0) {
+      return await this.getAllQuestions();
+    }
+
+    // Build search conditions for each keyword
+    const searchConditions = keywords.map(keyword => 
+      or(
+        like(questions.title, `%${keyword}%`),
+        like(questions.body, `%${keyword}%`)
+      )
+    );
+
+    // Combine all conditions with OR - match any keyword
+    return await db
+      .select()
+      .from(questions)
+      .where(or(...searchConditions))
       .orderBy(desc(questions.createdAt));
   }
 

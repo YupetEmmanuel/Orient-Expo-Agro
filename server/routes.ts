@@ -290,7 +290,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Question routes
   app.get("/api/questions", async (req, res) => {
     try {
-      const questions = await storage.getAllQuestions();
+      const { search } = req.query;
+      const questions = search
+        ? await storage.searchQuestions(search as string)
+        : await storage.getAllQuestions();
       res.json(questions);
     } catch (error) {
       console.error("Error fetching questions:", error);
