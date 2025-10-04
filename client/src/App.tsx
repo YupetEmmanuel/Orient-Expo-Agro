@@ -1,53 +1,25 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/useAuth";
-import NotFound from "@/pages/not-found";
-import Home from "@/pages/Home";
-import VendorProfile from "@/pages/VendorProfile";
-import ProductDetail from "@/pages/ProductDetail";
-import VendorDashboard from "@/pages/VendorDashboard";
-import VendorAnalytics from "@/pages/VendorAnalytics";
-import AdminDashboard from "@/pages/AdminDashboard";
-import Wishlist from "@/pages/Wishlist";
-
-function Router() {
-  const { isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/vendors/:id" component={VendorProfile} />
-      <Route path="/products/:id" component={ProductDetail} />
-      <Route path="/vendor-dashboard" component={VendorDashboard} />
-      <Route path="/vendor-analytics" component={VendorAnalytics} />
-      <Route path="/admin-dashboard" component={AdminDashboard} />
-      <Route path="/wishlist" component={Wishlist} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+import { Route, Switch } from "wouter";
+import RoleSelection from "./pages/RoleSelection";
+import VendorPostListing from "./pages/VendorPostListing";
+import BuyerBrowse from "./pages/BuyerBrowse";
+import CropInfo from "./pages/CropInfo";
+import ListingDetail from "./pages/ListingDetail";
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <Switch>
+        <Route path="/" component={RoleSelection} />
+        <Route path="/vendor/post" component={VendorPostListing} />
+        <Route path="/buyer/browse" component={BuyerBrowse} />
+        <Route path="/crop-info" component={CropInfo} />
+        <Route path="/listing/:id" component={ListingDetail} />
+        <Route>404 Page Not Found</Route>
+      </Switch>
+      <Toaster />
     </QueryClientProvider>
   );
 }
