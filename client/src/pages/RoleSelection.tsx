@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import heroImage from "@assets/stock_images/agricultural_field_c_5d66ae93.jpg";
 import vegetablesImage from "@assets/stock_images/fresh_vegetables_har_b2005c0c.jpg";
-import africanFarmImage from "@assets/stock_images/african_farmland_wit_1505c2ae.jpg";
+import farmlandImage from "@assets/stock_images/pexels_farm_image.jpg";
 
 export default function RoleSelection() {
   return (
@@ -33,8 +33,8 @@ export default function RoleSelection() {
           </div>
           <div className="rounded-lg overflow-hidden shadow-md">
             <img 
-              src={africanFarmImage} 
-              alt="African farmland" 
+              src={farmlandImage} 
+              alt="Farmland" 
               className="w-full h-48 object-cover"
             />
           </div>
