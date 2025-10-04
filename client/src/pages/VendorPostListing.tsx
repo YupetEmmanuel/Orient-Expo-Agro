@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -19,6 +19,7 @@ export default function VendorPostListing() {
   const [, setLocation] = useLocation();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const form = useForm<InsertListing>({
     resolver: zodResolver(insertListingSchema),
@@ -69,9 +70,55 @@ export default function VendorPostListing() {
     }
   };
 
-  const onSubmit = (data: InsertListing) => {
+  const onSubmit = async (data: InsertListing) => {
+    // If there's an image, upload it first
+    if (imageFile) {
+      setIsUploadingImage(true);
+      try {
+        // Get upload URL from backend
+        const uploadResponse = await fetch("/api/upload-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileName: imageFile.name }),
+        });
+        
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to get upload URL");
+        }
+
+        const { uploadUrl, publicUrl } = await uploadResponse.json();
+
+        // Upload image to GCS
+        const uploadResult = await fetch(uploadUrl, {
+          method: "PUT",
+          body: imageFile,
+          headers: {
+            "Content-Type": imageFile.type,
+          },
+        });
+
+        if (!uploadResult.ok) {
+          throw new Error("Failed to upload image");
+        }
+
+        // Set the proxied URL in form data (publicUrl is now /api/images/...)
+        data.imageUrl = publicUrl;
+      } catch (error) {
+        console.error("Image upload error:", error);
+        toast({
+          title: "Warning",
+          description: "Failed to upload image, but listing will be created without it.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+
     createListingMutation.mutate(data);
   };
+
+  const isLoading = createListingMutation.isPending || isUploadingImage;
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -219,6 +266,7 @@ export default function VendorPostListing() {
                       onChange={handleImageChange}
                       className="hidden"
                       id="image-upload"
+                      data-testid="input-image-upload"
                     />
                     <label htmlFor="image-upload" className="cursor-pointer">
                       {imagePreview ? (
@@ -237,10 +285,17 @@ export default function VendorPostListing() {
                   type="submit"
                   className="w-full"
                   size="lg"
-                  disabled={createListingMutation.isPending}
+                  disabled={isLoading}
                   data-testid="button-submit-listing"
                 >
-                  {createListingMutation.isPending ? "Posting..." : "Post Listing"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {isUploadingImage ? "Uploading image..." : "Posting..."}
+                    </>
+                  ) : (
+                    "Post Listing"
+                  )}
                 </Button>
               </form>
             </Form>
