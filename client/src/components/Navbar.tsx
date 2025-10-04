@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Home, Store, LayoutDashboard, Shield, Heart, Download, Smartphone } from "lucide-react";
+import { Home, Store, LayoutDashboard, Shield, Heart, Download, Smartphone, Share2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import {
@@ -18,7 +18,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [installDialogOpen, setInstallDialogOpen] = useState(false);
-  const { isInstallable, isIOS, isAndroid, installApp } = usePWAInstall();
+  const { isInstallable, isIOS, isAndroid, isInstalled, installApp, shareApp } = usePWAInstall();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -47,6 +47,13 @@ export default function Navbar() {
 
   const handleInstallIOS = () => {
     setInstallDialogOpen(false);
+  };
+
+  const handleShare = async () => {
+    const shared = await shareApp();
+    if (shared) {
+      setInstallDialogOpen(false);
+    }
   };
 
   return (
@@ -160,17 +167,30 @@ export default function Navbar() {
               size="sm"
               onClick={() => setInstallDialogOpen(true)}
               className="hidden md:flex items-center space-x-1"
-              data-testid="button-download-app"
+              data-testid={isInstalled ? "button-share-app" : "button-download-app"}
             >
-              <Download className="w-4 h-4" />
-              <span>Download</span>
+              {isInstalled ? (
+                <>
+                  <Share2 className="w-4 h-4" />
+                  <span>Share</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  <span>Download</span>
+                </>
+              )}
             </Button>
             <button
               onClick={() => setInstallDialogOpen(true)}
               className="md:hidden p-2 hover:bg-muted rounded-lg"
-              data-testid="button-download-app-mobile"
+              data-testid={isInstalled ? "button-share-app-mobile" : "button-download-app-mobile"}
             >
-              <Download className="w-5 h-5" />
+              {isInstalled ? (
+                <Share2 className="w-5 h-5" />
+              ) : (
+                <Download className="w-5 h-5" />
+              )}
             </button>
             <button
               className="md:hidden p-2 hover:bg-muted rounded-lg"
@@ -270,55 +290,92 @@ export default function Navbar() {
 
       <Dialog open={installDialogOpen} onOpenChange={setInstallDialogOpen}>
         <DialogContent className="sm:max-w-md" style={{ backgroundColor: '#F5F5DC', opacity: 1 }}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Download className="w-5 h-5" />
-              <span>Download Orient App</span>
-            </DialogTitle>
-            <DialogDescription>
-              Choose your device type to install Orient as an app on your phone
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 pt-4">
-            <Button
-              onClick={handleInstallAndroid}
-              className="w-full flex items-center justify-center space-x-2 h-14"
-              variant="default"
-              disabled={!isInstallable && isAndroid}
-              data-testid="button-install-android"
-            >
-              <Smartphone className="w-5 h-5" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold">Android</span>
-                <span className="text-xs opacity-90">
-                  {isInstallable ? "Install now" : "Use Chrome browser to install"}
-                </span>
+          {isInstalled ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                  <Share2 className="w-5 h-5" />
+                  <span>Share Orient App</span>
+                </DialogTitle>
+                <DialogDescription>
+                  Share Orient with friends and family so they can discover great local vendors!
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 pt-4">
+                <Button
+                  onClick={handleShare}
+                  className="w-full flex items-center justify-center space-x-2 h-14"
+                  variant="default"
+                  data-testid="button-share-link"
+                >
+                  <Share2 className="w-5 h-5" />
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">Share App Link</span>
+                    <span className="text-xs opacity-90">
+                      Send link via messages, email, or social media
+                    </span>
+                  </div>
+                </Button>
               </div>
-            </Button>
-            <Button
-              onClick={handleInstallIOS}
-              className="w-full flex items-center justify-center space-x-2 h-14"
-              variant="default"
-              data-testid="button-install-ios"
-            >
-              <Smartphone className="w-5 h-5" />
-              <div className="flex flex-col items-start">
-                <span className="font-semibold">iOS (iPhone/iPad)</span>
-                <span className="text-xs opacity-90">
-                  Tap Share → Add to Home Screen
-                </span>
+              <div className="mt-4 p-3 bg-muted rounded-lg text-sm">
+                <p className="text-muted-foreground">
+                  When others open the link, they'll be able to browse Orient and install it on their devices too!
+                </p>
               </div>
-            </Button>
-          </div>
-          {isIOS && (
-            <div className="mt-4 p-3 bg-muted rounded-lg text-sm">
-              <p className="font-semibold mb-1">iOS Installation Steps:</p>
-              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                <li>Tap the Share button (square with arrow)</li>
-                <li>Scroll down and tap "Add to Home Screen"</li>
-                <li>Tap "Add" in the top right corner</li>
-              </ol>
-            </div>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                  <Download className="w-5 h-5" />
+                  <span>Download Orient App</span>
+                </DialogTitle>
+                <DialogDescription>
+                  Choose your device type to install Orient as an app on your phone
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 pt-4">
+                <Button
+                  onClick={handleInstallAndroid}
+                  className="w-full flex items-center justify-center space-x-2 h-14"
+                  variant="default"
+                  disabled={!isInstallable && isAndroid}
+                  data-testid="button-install-android"
+                >
+                  <Smartphone className="w-5 h-5" />
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">Android</span>
+                    <span className="text-xs opacity-90">
+                      {isInstallable ? "Install now" : "Use Chrome browser to install"}
+                    </span>
+                  </div>
+                </Button>
+                <Button
+                  onClick={handleInstallIOS}
+                  className="w-full flex items-center justify-center space-x-2 h-14"
+                  variant="default"
+                  data-testid="button-install-ios"
+                >
+                  <Smartphone className="w-5 h-5" />
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">iOS (iPhone/iPad)</span>
+                    <span className="text-xs opacity-90">
+                      Tap Share → Add to Home Screen
+                    </span>
+                  </div>
+                </Button>
+              </div>
+              {isIOS && (
+                <div className="mt-4 p-3 bg-muted rounded-lg text-sm">
+                  <p className="font-semibold mb-1">iOS Installation Steps:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                    <li>Tap the Share button (square with arrow)</li>
+                    <li>Scroll down and tap "Add to Home Screen"</li>
+                    <li>Tap "Add" in the top right corner</li>
+                  </ol>
+                </div>
+              )}
+            </>
           )}
         </DialogContent>
       </Dialog>
