@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Listing } from "@shared/schema";
 import { Link, useParams } from "wouter";
-import { ArrowLeft, Phone, Mail, MessageCircle } from "lucide-react";
+import { ArrowLeft, Phone, Mail, MessageCircle, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -10,6 +10,20 @@ export default function ListingDetail() {
 
   const { data: listing, isLoading } = useQuery<Listing>({
     queryKey: [`/api/listings/${id}`],
+  });
+
+  const { data: vendorListings } = useQuery<Listing[]>({
+    queryKey: ["/api/listings", { role: "vendor", search: listing?.vendorName }],
+    queryFn: async ({ queryKey }) => {
+      const [url, params] = queryKey as [string, { role?: string; search?: string }];
+      const searchParams = new URLSearchParams();
+      if (params.role) searchParams.append("role", params.role);
+      if (params.search) searchParams.append("search", params.search);
+      const res = await fetch(`${url}?${searchParams.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch listings");
+      return res.json();
+    },
+    enabled: !!listing,
   });
 
   if (isLoading) {
@@ -118,6 +132,57 @@ export default function ListingDetail() {
             </div>
           </CardContent>
         </Card>
+
+        {vendorListings && vendorListings.length > 1 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>More from {listing.vendorName}</CardTitle>
+              <CardDescription>Other products from this vendor</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {vendorListings
+                  .filter((item) => item.id !== listing.id)
+                  .map((item) => (
+                    <Link key={item.id} href={`/listing/${item.id}`}>
+                      <Card className="card-hover cursor-pointer" data-testid={`card-suggestion-${item.id}`}>
+                        <CardHeader>
+                          {item.imageUrl && (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.itemName}
+                              className="w-full h-32 object-cover rounded-lg mb-2"
+                              data-testid={`img-suggestion-${item.id}`}
+                            />
+                          )}
+                          <CardTitle className="text-lg">{item.itemName}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-xl font-bold text-primary">
+                            ${item.price}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="flex gap-4 justify-center">
+          <Link href="/">
+            <Button variant="outline" size="lg" data-testid="button-home">
+              <Home className="h-5 w-5 mr-2" />
+              Go Home
+            </Button>
+          </Link>
+          <Link href="/buyer/browse">
+            <Button variant="outline" size="lg" data-testid="button-browse">
+              Browse All Products
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
