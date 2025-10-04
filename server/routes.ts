@@ -60,9 +60,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       // Remove password from response
       res.json(sanitizeListing(listing));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating listing:", error);
-      res.status(400).json({ message: "Failed to create listing" });
+      // If it's a Zod validation error, return the specific error
+      if (error.name === 'ZodError') {
+        const firstError = error.errors[0];
+        return res.status(400).json({ 
+          message: `${firstError.path.join('.')}: ${firstError.message}` 
+        });
+      }
+      res.status(400).json({ message: error.message || "Failed to create listing" });
     }
   });
 
