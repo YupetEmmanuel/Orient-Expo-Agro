@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -298,18 +298,21 @@ export default function VendorPostListing() {
 
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold shadow-md"
                   size="lg"
                   disabled={isLoading}
                   data-testid="button-submit-listing"
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       {isUploadingImage ? "Uploading image..." : "Posting..."}
                     </>
                   ) : (
-                    "Post Listing"
+                    <>
+                      <Send className="mr-2 h-5 w-5" />
+                      Post Listing
+                    </>
                   )}
                 </Button>
               </form>
