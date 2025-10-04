@@ -33,6 +33,7 @@ export default function VendorPostListing() {
       contactPhone: "",
       contactEmail: "",
       imageUrl: "",
+      password: "",
     },
   });
 
@@ -251,6 +252,20 @@ export default function VendorPostListing() {
                       <FormLabel>Email Address *</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="john@example.com" {...field} data-testid="input-email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password *</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Set a password to manage your listing" {...field} data-testid="input-password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
