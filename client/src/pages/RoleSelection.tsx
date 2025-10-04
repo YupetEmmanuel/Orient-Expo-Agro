@@ -42,7 +42,7 @@ export default function RoleSelection() {
 
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="card-hover cursor-pointer hover:border-primary transition-all">
-            <Link href="/vendor/post">
+            <Link href="/vendor/browse">
               <CardHeader className="text-center">
                 <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                   <Store className="h-8 w-8 text-primary" />
@@ -54,7 +54,7 @@ export default function RoleSelection() {
               </CardHeader>
               <CardContent>
                 <Button className="w-full" size="lg" data-testid="button-vendor-role">
-                  Post Your Products
+                  Explore & Sell
                 </Button>
               </CardContent>
             </Link>
