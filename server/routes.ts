@@ -4,9 +4,17 @@ import { storage } from "./storage";
 import {
   insertListingSchema,
   insertCropInfoSchema,
+  type Listing,
 } from "@shared/schema";
 import { ObjectStorageService, objectStorageClient } from "./objectStorage";
 import { randomUUID } from "crypto";
+import bcrypt from "bcrypt";
+
+// Helper function to remove password from listing
+function sanitizeListing(listing: Listing): Omit<Listing, 'password'> {
+  const { password, ...sanitized } = listing;
+  return sanitized;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Listing routes
@@ -18,7 +26,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cropType: cropType as string,
         search: search as string,
       });
-      res.json(listings);
+      // Remove passwords from response
+      const sanitizedListings = listings.map(sanitizeListing);
+      res.json(sanitizedListings);
     } catch (error) {
       console.error("Error fetching listings:", error);
       res.status(500).json({ message: "Failed to fetch listings" });
@@ -31,7 +41,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!listing) {
         return res.status(404).json({ message: "Listing not found" });
       }
-      res.json(listing);
+      // Remove password from response
+      res.json(sanitizeListing(listing));
     } catch (error) {
       console.error("Error fetching listing:", error);
       res.status(500).json({ message: "Failed to fetch listing" });
@@ -41,8 +52,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/listings", async (req, res) => {
     try {
       const validated = insertListingSchema.parse(req.body);
-      const listing = await storage.createListing(validated);
-      res.json(listing);
+      // Hash password before storing
+      const hashedPassword = await bcrypt.hash(validated.password, 10);
+      const listing = await storage.createListing({
+        ...validated,
+        password: hashedPassword,
+      });
+      // Remove password from response
+      res.json(sanitizeListing(listing));
     } catch (error) {
       console.error("Error creating listing:", error);
       res.status(400).json({ message: "Failed to create listing" });
@@ -52,11 +69,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/listings/:id", async (req, res) => {
     try {
       const validated = insertListingSchema.partial().parse(req.body);
+      // If password is being updated, hash it
+      if (validated.password) {
+        validated.password = await bcrypt.hash(validated.password, 10);
+      }
       const listing = await storage.updateListing(req.params.id, validated);
       if (!listing) {
         return res.status(404).json({ message: "Listing not found" });
       }
-      res.json(listing);
+      // Remove password from response
+      res.json(sanitizeListing(listing));
     } catch (error) {
       console.error("Error updating listing:", error);
       res.status(400).json({ message: "Failed to update listing" });
@@ -77,8 +99,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Listing not found" });
       }
       
-      // Verify vendor name and password
-      if (listing.vendorName !== vendorName || listing.password !== password) {
+      // Verify vendor name and compare hashed password
+      const passwordMatch = await bcrypt.compare(password, listing.password);
+      if (listing.vendorName !== vendorName || !passwordMatch) {
         return res.status(403).json({ message: "Invalid vendor name or password" });
       }
       
