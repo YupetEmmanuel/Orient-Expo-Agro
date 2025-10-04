@@ -1,14 +1,24 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Home, Store, LayoutDashboard, Shield, Heart } from "lucide-react";
+import { Home, Store, LayoutDashboard, Shield, Heart, Download, Smartphone } from "lucide-react";
 import { useState, useEffect } from "react";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function Navbar() {
   const [location, navigate] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [installDialogOpen, setInstallDialogOpen] = useState(false);
+  const { isInstallable, isIOS, isAndroid, installApp } = usePWAInstall();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -28,19 +38,42 @@ export default function Navbar() {
     }
   };
 
+  const handleInstallAndroid = async () => {
+    const installed = await installApp();
+    if (installed) {
+      setInstallDialogOpen(false);
+    }
+  };
+
+  const handleInstallIOS = () => {
+    setInstallDialogOpen(false);
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="flex items-center space-x-3" data-testid="link-home">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Home className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-primary">Orient</h1>
-              <p className="text-xs text-muted-foreground">Vendor Marketplace</p>
-            </div>
-          </Link>
+          <div className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center space-x-3" data-testid="link-home">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <Home className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-primary">Orient</h1>
+                <p className="text-xs text-muted-foreground">Vendor Marketplace</p>
+              </div>
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setInstallDialogOpen(true)}
+              className="hidden sm:flex items-center space-x-1 text-sm"
+              data-testid="button-download-app"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download App</span>
+            </Button>
+          </div>
 
           <div className="hidden md:flex flex-1 max-w-lg mx-8">
             <div className="relative w-full">
@@ -229,6 +262,61 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
+      <Dialog open={installDialogOpen} onOpenChange={setInstallDialogOpen}>
+        <DialogContent className="sm:max-w-md" style={{ backgroundColor: '#F5F5DC', opacity: 1 }}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Download className="w-5 h-5" />
+              <span>Download Orient App</span>
+            </DialogTitle>
+            <DialogDescription>
+              Choose your device type to install Orient as an app on your phone
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-4">
+            <Button
+              onClick={handleInstallAndroid}
+              className="w-full flex items-center justify-center space-x-2 h-14"
+              variant="default"
+              disabled={!isInstallable && isAndroid}
+              data-testid="button-install-android"
+            >
+              <Smartphone className="w-5 h-5" />
+              <div className="flex flex-col items-start">
+                <span className="font-semibold">Android</span>
+                <span className="text-xs opacity-90">
+                  {isInstallable ? "Install now" : "Use Chrome browser to install"}
+                </span>
+              </div>
+            </Button>
+            <Button
+              onClick={handleInstallIOS}
+              className="w-full flex items-center justify-center space-x-2 h-14"
+              variant="default"
+              data-testid="button-install-ios"
+            >
+              <Smartphone className="w-5 h-5" />
+              <div className="flex flex-col items-start">
+                <span className="font-semibold">iOS (iPhone/iPad)</span>
+                <span className="text-xs opacity-90">
+                  Tap Share → Add to Home Screen
+                </span>
+              </div>
+            </Button>
+          </div>
+          {isIOS && (
+            <div className="mt-4 p-3 bg-muted rounded-lg text-sm">
+              <p className="font-semibold mb-1">iOS Installation Steps:</p>
+              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                <li>Tap the Share button (square with arrow)</li>
+                <li>Scroll down and tap "Add to Home Screen"</li>
+                <li>Tap "Add" in the top right corner</li>
+              </ol>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 }
