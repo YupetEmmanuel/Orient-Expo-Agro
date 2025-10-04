@@ -176,11 +176,11 @@ export default function VendorPostListing() {
                   name="cropType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Crop Type</FormLabel>
+                      <FormLabel>Crop Type *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                         <FormControl>
                           <SelectTrigger data-testid="select-crop-type">
-                            <SelectValue placeholder="Select crop type" />
+                            <SelectValue placeholder="Select crop type (required)" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
