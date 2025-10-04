@@ -61,3 +61,41 @@ export const insertCropInfoSchema = createInsertSchema(cropInfo).omit({
 
 export type InsertCropInfo = z.infer<typeof insertCropInfoSchema>;
 export type CropInfo = typeof cropInfo.$inferSelect;
+
+// Questions - Q&A section for learning about Orient
+export const questions = pgTable("questions", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  authorName: text("author_name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertQuestionSchema = createInsertSchema(questions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
+export type Question = typeof questions.$inferSelect;
+
+// Answers - responses to questions
+export const answers = pgTable("answers", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  questionId: varchar("question_id").notNull(),
+  body: text("body").notNull(),
+  authorName: text("author_name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAnswerSchema = createInsertSchema(answers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAnswer = z.infer<typeof insertAnswerSchema>;
+export type Answer = typeof answers.$inferSelect;

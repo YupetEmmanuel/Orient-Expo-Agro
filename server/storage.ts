@@ -1,10 +1,16 @@
 import {
   listings,
   cropInfo,
+  questions,
+  answers,
   type Listing,
   type InsertListing,
   type CropInfo,
   type InsertCropInfo,
+  type Question,
+  type InsertQuestion,
+  type Answer,
+  type InsertAnswer,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, like, or, and, SQL } from "drizzle-orm";
@@ -34,6 +40,17 @@ export interface IStorage {
     updates: Partial<InsertCropInfo>
   ): Promise<CropInfo | undefined>;
   deleteCropInfo(id: string): Promise<void>;
+
+  // Question operations
+  getQuestion(id: string): Promise<Question | undefined>;
+  getAllQuestions(): Promise<Question[]>;
+  createQuestion(question: InsertQuestion): Promise<Question>;
+  deleteQuestion(id: string): Promise<void>;
+
+  // Answer operations
+  getAnswersByQuestionId(questionId: string): Promise<Answer[]>;
+  createAnswer(answer: InsertAnswer): Promise<Answer>;
+  deleteAnswer(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -156,6 +173,55 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCropInfo(id: string): Promise<void> {
     await db.delete(cropInfo).where(eq(cropInfo.id, id));
+  }
+
+  // Question operations
+  async getQuestion(id: string): Promise<Question | undefined> {
+    const [question] = await db
+      .select()
+      .from(questions)
+      .where(eq(questions.id, id));
+    return question;
+  }
+
+  async getAllQuestions(): Promise<Question[]> {
+    return await db
+      .select()
+      .from(questions)
+      .orderBy(desc(questions.createdAt));
+  }
+
+  async createQuestion(question: InsertQuestion): Promise<Question> {
+    const [newQuestion] = await db
+      .insert(questions)
+      .values(question)
+      .returning();
+    return newQuestion;
+  }
+
+  async deleteQuestion(id: string): Promise<void> {
+    await db.delete(questions).where(eq(questions.id, id));
+  }
+
+  // Answer operations
+  async getAnswersByQuestionId(questionId: string): Promise<Answer[]> {
+    return await db
+      .select()
+      .from(answers)
+      .where(eq(answers.questionId, questionId))
+      .orderBy(desc(answers.createdAt));
+  }
+
+  async createAnswer(answer: InsertAnswer): Promise<Answer> {
+    const [newAnswer] = await db
+      .insert(answers)
+      .values(answer)
+      .returning();
+    return newAnswer;
+  }
+
+  async deleteAnswer(id: string): Promise<void> {
+    await db.delete(answers).where(eq(answers.id, id));
   }
 }
 

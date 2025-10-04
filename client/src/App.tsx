@@ -8,6 +8,7 @@ import VendorBrowse from "./pages/VendorBrowse";
 import BuyerBrowse from "./pages/BuyerBrowse";
 import CropInfo from "./pages/CropInfo";
 import ListingDetail from "./pages/ListingDetail";
+import QuestionsPage from "./pages/QuestionsPage";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/vendor/post" component={VendorPostListing} />
         <Route path="/buyer/browse" component={BuyerBrowse} />
         <Route path="/crop-info" component={CropInfo} />
+        <Route path="/questions" component={QuestionsPage} />
         <Route path="/listing/:id" component={ListingDetail} />
         <Route>404 Page Not Found</Route>
       </Switch>

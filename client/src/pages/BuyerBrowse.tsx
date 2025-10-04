@@ -121,9 +121,9 @@ export default function BuyerBrowse() {
         )}
 
         <div className="text-center pt-8">
-          <Link href="/crop-info">
-            <Button variant="outline" data-testid="button-view-crop-info">
-              Learn About Crops
+          <Link href="/questions">
+            <Button variant="outline" data-testid="button-view-questions">
+              Learn About Orient - Post Questions
             </Button>
           </Link>
         </div>

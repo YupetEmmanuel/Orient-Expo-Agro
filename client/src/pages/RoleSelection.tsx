@@ -81,9 +81,9 @@ export default function RoleSelection() {
         </div>
 
         <div className="text-center">
-          <Link href="/crop-info">
-            <Button variant="outline" size="lg" data-testid="button-crop-info">
-              Learn About Crops
+          <Link href="/questions">
+            <Button variant="outline" size="lg" data-testid="button-questions">
+              Learn About Orient - Post Questions
             </Button>
           </Link>
         </div>

@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import {
   insertListingSchema,
   insertCropInfoSchema,
+  insertQuestionSchema,
+  insertAnswerSchema,
   type Listing,
 } from "@shared/schema";
 import { ObjectStorageService, objectStorageClient } from "./objectStorage";
@@ -282,6 +284,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting crop info:", error);
       res.status(500).json({ message: "Failed to delete crop info" });
+    }
+  });
+
+  // Question routes
+  app.get("/api/questions", async (req, res) => {
+    try {
+      const questions = await storage.getAllQuestions();
+      res.json(questions);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      res.status(500).json({ message: "Failed to fetch questions" });
+    }
+  });
+
+  app.get("/api/questions/:id", async (req, res) => {
+    try {
+      const question = await storage.getQuestion(req.params.id);
+      if (!question) {
+        return res.status(404).json({ message: "Question not found" });
+      }
+      res.json(question);
+    } catch (error) {
+      console.error("Error fetching question:", error);
+      res.status(500).json({ message: "Failed to fetch question" });
+    }
+  });
+
+  app.post("/api/questions", async (req, res) => {
+    try {
+      const validated = insertQuestionSchema.parse(req.body);
+      const question = await storage.createQuestion(validated);
+      res.json(question);
+    } catch (error: any) {
+      console.error("Error creating question:", error);
+      if (error.name === 'ZodError') {
+        const firstError = error.errors[0];
+        return res.status(400).json({ 
+          message: `${firstError.path.join('.')}: ${firstError.message}` 
+        });
+      }
+      res.status(400).json({ message: error.message || "Failed to create question" });
+    }
+  });
+
+  app.delete("/api/questions/:id", async (req, res) => {
+    try {
+      await storage.deleteQuestion(req.params.id);
+      res.json({ message: "Question deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      res.status(500).json({ message: "Failed to delete question" });
+    }
+  });
+
+  // Answer routes
+  app.get("/api/questions/:questionId/answers", async (req, res) => {
+    try {
+      const answers = await storage.getAnswersByQuestionId(req.params.questionId);
+      res.json(answers);
+    } catch (error) {
+      console.error("Error fetching answers:", error);
+      res.status(500).json({ message: "Failed to fetch answers" });
+    }
+  });
+
+  app.post("/api/answers", async (req, res) => {
+    try {
+      const validated = insertAnswerSchema.parse(req.body);
+      const answer = await storage.createAnswer(validated);
+      res.json(answer);
+    } catch (error: any) {
+      console.error("Error creating answer:", error);
+      if (error.name === 'ZodError') {
+        const firstError = error.errors[0];
+        return res.status(400).json({ 
+          message: `${firstError.path.join('.')}: ${firstError.message}` 
+        });
+      }
+      res.status(400).json({ message: error.message || "Failed to create answer" });
+    }
+  });
+
+  app.delete("/api/answers/:id", async (req, res) => {
+    try {
+      await storage.deleteAnswer(req.params.id);
+      res.json({ message: "Answer deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting answer:", error);
+      res.status(500).json({ message: "Failed to delete answer" });
     }
   });
 

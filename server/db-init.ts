@@ -3,16 +3,7 @@ import { sql } from "drizzle-orm";
 
 export async function initializeDatabase() {
   try {
-    console.log("Checking database tables...");
-    
-    // Check if tables exist by trying to query them
-    try {
-      await db.execute(sql`SELECT 1 FROM listings LIMIT 1`);
-      console.log("✓ Database tables already exist");
-      return;
-    } catch (error) {
-      console.log("Database tables don't exist, creating them...");
-    }
+    console.log("Initializing database tables...");
 
     // Create listings table
     await db.execute(sql`
@@ -46,6 +37,30 @@ export async function initializeDatabase() {
       )
     `);
     console.log("✓ Created crop_info table");
+
+    // Create questions table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS questions (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        author_name TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    console.log("✓ Created questions table");
+
+    // Create answers table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS answers (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        question_id VARCHAR NOT NULL,
+        body TEXT NOT NULL,
+        author_name TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    console.log("✓ Created answers table");
 
     console.log("✓ Database initialization complete");
   } catch (error) {
