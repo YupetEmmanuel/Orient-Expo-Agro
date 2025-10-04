@@ -67,11 +67,12 @@ export default function Navbar() {
               variant="ghost"
               size="sm"
               onClick={() => setInstallDialogOpen(true)}
-              className="hidden sm:flex items-center space-x-1 text-sm"
+              className="flex items-center space-x-1 text-sm"
               data-testid="button-download-app"
             >
               <Download className="w-4 h-4" />
-              <span>Download App</span>
+              <span className="hidden sm:inline">Download App</span>
+              <span className="sm:hidden">Download</span>
             </Button>
           </div>
 
