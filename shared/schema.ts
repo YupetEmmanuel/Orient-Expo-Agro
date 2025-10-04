@@ -23,6 +23,7 @@ export const listings = pgTable("listings", {
   contactPhone: text("contact_phone").notNull(),
   contactEmail: text("contact_email").notNull(),
   imageUrl: text("image_url"),
+  password: text("password").notNull(), // for vendor to delete their listing
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -35,6 +36,7 @@ export const insertListingSchema = createInsertSchema(listings).omit({
   contactEmail: z.string().email("Invalid email address"),
   contactPhone: z.string().min(10, "Phone number must be at least 10 digits"),
   price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
+  password: z.string().min(4, "Password must be at least 4 characters"),
 });
 
 export type InsertListing = z.infer<typeof insertListingSchema>;
