@@ -1,12 +1,13 @@
 {
-  "name": "Orient Marketplace",
+  "name": "Orient - Farmers Marketplace",
   "short_name": "Orient",
-  "description": "A vendor marketplace connecting customers with quality vendors",
+  "description": "Connecting farmers and food vendors with buyers",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FAF3E0",
-  "theme_color": "#1E3A8A",
+  "background_color": "#F9F7F3",
+  "theme_color": "#006994",
   "orientation": "portrait-primary",
+  "categories": ["shopping", "food"],
   "icons": [
     {
       "src": "/icon-192.png",
