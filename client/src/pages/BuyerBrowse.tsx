@@ -85,61 +85,37 @@ export default function BuyerBrowse() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredListings.map((listing) => (
-              <Card key={listing.id} className="card-hover" data-testid={`card-listing-${listing.id}`}>
-                <CardHeader>
-                  {listing.imageUrl && (
-                    <img
-                      src={listing.imageUrl}
-                      alt={listing.itemName}
-                      className="w-full h-48 object-cover rounded-lg mb-4"
-                      data-testid={`img-listing-${listing.id}`}
-                    />
-                  )}
-                  <CardTitle className="text-xl">{listing.itemName}</CardTitle>
-                  <CardDescription>{listing.vendorName}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {listing.cropType && (
-                    <div className="inline-block px-3 py-1 bg-accent/20 text-accent-foreground rounded-full text-sm">
-                      {listing.cropType}
+              <Link key={listing.id} href={`/listing/${listing.id}`}>
+                <Card className="card-hover cursor-pointer" data-testid={`card-listing-${listing.id}`}>
+                  <CardHeader>
+                    {listing.imageUrl && (
+                      <img
+                        src={listing.imageUrl}
+                        alt={listing.itemName}
+                        className="w-full h-48 object-cover rounded-lg mb-4"
+                        data-testid={`img-listing-${listing.id}`}
+                      />
+                    )}
+                    <CardTitle className="text-xl">{listing.itemName}</CardTitle>
+                    <CardDescription>{listing.vendorName}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {listing.cropType && (
+                      <div className="inline-block px-3 py-1 bg-accent/20 text-accent-foreground rounded-full text-sm">
+                        {listing.cropType}
+                      </div>
+                    )}
+                    {listing.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {listing.description}
+                      </p>
+                    )}
+                    <div className="text-2xl font-bold text-primary">
+                      ${listing.price}
                     </div>
-                  )}
-                  {listing.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {listing.description}
-                    </p>
-                  )}
-                  <div className="text-2xl font-bold text-primary">
-                    ${listing.price}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      data-testid={`button-call-${listing.id}`}
-                    >
-                      <a href={`tel:${listing.contactPhone}`}>
-                        <Phone className="h-4 w-4 mr-1" />
-                        Call
-                      </a>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      data-testid={`button-email-${listing.id}`}
-                    >
-                      <a href={`mailto:${listing.contactEmail}`}>
-                        <Mail className="h-4 w-4 mr-1" />
-                        Email
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
