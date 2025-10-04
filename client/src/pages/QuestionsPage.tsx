@@ -6,7 +6,7 @@ import { insertQuestionSchema, insertAnswerSchema, type Question, type Answer, t
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { ArrowLeft, MessageCircle, Send, Loader2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, Send, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -26,6 +26,7 @@ export default function QuestionsPage() {
   const { toast } = useToast();
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const questionForm = useForm<InsertQuestion>({
     resolver: zodResolver(insertQuestionSchema),
@@ -46,7 +47,15 @@ export default function QuestionsPage() {
   });
 
   const { data: questions = [], isLoading: questionsLoading } = useQuery<Question[]>({
-    queryKey: ["/api/questions"],
+    queryKey: ["/api/questions", searchQuery],
+    queryFn: async () => {
+      const url = searchQuery 
+        ? `/api/questions?search=${encodeURIComponent(searchQuery)}`
+        : "/api/questions";
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch questions");
+      return res.json();
+    },
   });
 
   const { data: answers = [] } = useQuery<Answer[]>({
@@ -247,6 +256,18 @@ export default function QuestionsPage() {
             </Button>
           </DialogTrigger>
         </Dialog>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search questions... (e.g., vendor, contact, upload)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+            data-testid="input-search-questions"
+          />
+        </div>
 
         {questionsLoading ? (
           <div className="text-center py-12">
