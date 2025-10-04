@@ -298,19 +298,19 @@ export default function VendorPostListing() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold shadow-md"
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-bold shadow-lg text-lg py-6"
                   size="lg"
                   disabled={isLoading}
                   data-testid="button-submit-listing"
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      <Loader2 className="mr-3 h-6 w-6 animate-spin" />
                       {isUploadingImage ? "Uploading image..." : "Posting..."}
                     </>
                   ) : (
                     <>
-                      <Send className="mr-2 h-5 w-5" />
+                      <Upload className="mr-3 h-6 w-6 stroke-white fill-white" />
                       Post Listing
                     </>
                   )}
