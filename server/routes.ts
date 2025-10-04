@@ -65,6 +65,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/listings/:id", async (req, res) => {
     try {
+      const { vendorName, password } = req.body;
+      
+      if (!vendorName || !password) {
+        return res.status(400).json({ message: "Vendor name and password are required" });
+      }
+      
+      // Get the listing first to verify credentials
+      const listing = await storage.getListing(req.params.id);
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+      
+      // Verify vendor name and password
+      if (listing.vendorName !== vendorName || listing.password !== password) {
+        return res.status(403).json({ message: "Invalid vendor name or password" });
+      }
+      
       await storage.deleteListing(req.params.id);
       res.json({ message: "Listing deleted successfully" });
     } catch (error) {

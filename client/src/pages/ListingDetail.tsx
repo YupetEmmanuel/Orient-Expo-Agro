@@ -1,12 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Listing } from "@shared/schema";
-import { Link, useParams } from "wouter";
-import { ArrowLeft, Phone, Mail, MessageCircle, Home } from "lucide-react";
+import { Link, useParams, useLocation } from "wouter";
+import { ArrowLeft, Phone, Mail, MessageCircle, Home, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function ListingDetail() {
   const { id } = useParams();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [vendorName, setVendorName] = useState("");
+  const [password, setPassword] = useState("");
 
   const { data: listing, isLoading } = useQuery<Listing>({
     queryKey: [`/api/listings/${id}`],
@@ -25,6 +36,48 @@ export default function ListingDetail() {
     },
     enabled: !!listing,
   });
+
+  const deleteListingMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", `/api/listings/${id}`, {
+        vendorName,
+        password,
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to delete listing");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/listings"] });
+      toast({
+        title: "Success",
+        description: "Listing deleted successfully",
+      });
+      setDeleteDialogOpen(false);
+      setLocation("/vendor/browse");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDelete = () => {
+    if (!vendorName || !password) {
+      toast({
+        title: "Error",
+        description: "Please enter vendor name and password",
+        variant: "destructive",
+      });
+      return;
+    }
+    deleteListingMutation.mutate();
+  };
 
   if (isLoading) {
     return (
@@ -170,7 +223,7 @@ export default function ListingDetail() {
           </Card>
         )}
 
-        <div className="flex gap-4 justify-center">
+        <div className="flex gap-4 justify-center flex-wrap">
           <Link href="/">
             <Button variant="outline" size="lg" data-testid="button-home">
               <Home className="h-5 w-5 mr-2" />
@@ -182,6 +235,59 @@ export default function ListingDetail() {
               Browse All Products
             </Button>
           </Link>
+          
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="lg" data-testid="button-delete-listing">
+                <Trash2 className="h-5 w-5 mr-2" />
+                Delete Listing
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Listing</AlertDialogTitle>
+                <AlertDialogDescription>
+                  To delete this listing, please confirm your vendor name and password.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="vendor-name">Vendor Name</Label>
+                  <Input
+                    id="vendor-name"
+                    placeholder="Enter your vendor name"
+                    value={vendorName}
+                    onChange={(e) => setVendorName(e.target.value)}
+                    data-testid="input-delete-vendor-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    data-testid="input-delete-password"
+                  />
+                </div>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDelete();
+                  }}
+                  disabled={deleteListingMutation.isPending}
+                  data-testid="button-confirm-delete"
+                >
+                  {deleteListingMutation.isPending ? "Deleting..." : "Delete"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
