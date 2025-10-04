@@ -40,6 +40,10 @@ export default function VendorPostListing() {
   const createListingMutation = useMutation({
     mutationFn: async (data: InsertListing) => {
       const res = await apiRequest("POST", "/api/listings", data);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: "Unknown error" }));
+        throw new Error(errorData.message || "Failed to create listing");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -50,10 +54,10 @@ export default function VendorPostListing() {
       });
       setLocation("/buyer/browse");
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to post listing. Please try again.",
+        description: error.message || "Failed to post listing. Please try again.",
         variant: "destructive",
       });
     },
