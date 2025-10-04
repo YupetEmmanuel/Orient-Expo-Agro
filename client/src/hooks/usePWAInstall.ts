@@ -59,31 +59,31 @@ export function usePWAInstall() {
     return false;
   };
 
-  const shareApp = async () => {
+  const shareApp = async (): Promise<{ success: boolean; cancelled?: boolean; method?: 'share' | 'clipboard' }> => {
     const shareData = {
       title: 'Orient - Vendor Marketplace',
       text: 'Check out Orient, a marketplace connecting farmers and food vendors with customers!',
       url: window.location.origin,
     };
 
-    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+    if (navigator.share) {
       try {
         await navigator.share(shareData);
-        return true;
+        return { success: true, method: 'share' };
       } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          console.error('Error sharing:', err);
+        if ((err as Error).name === 'AbortError') {
+          return { success: false, cancelled: true };
         }
-        return false;
+        console.error('Error sharing:', err);
       }
-    } else {
-      try {
-        await navigator.clipboard.writeText(window.location.origin);
-        return true;
-      } catch (err) {
-        console.error('Error copying to clipboard:', err);
-        return false;
-      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(window.location.origin);
+      return { success: true, method: 'clipboard' };
+    } catch (err) {
+      console.error('Error copying to clipboard:', err);
+      return { success: false };
     }
   };
 

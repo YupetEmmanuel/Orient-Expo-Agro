@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Home, Store, LayoutDashboard, Shield, Heart, Download, Smartphone, Share2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [installDialogOpen, setInstallDialogOpen] = useState(false);
   const { isInstallable, isIOS, isAndroid, isInstalled, installApp, shareApp } = usePWAInstall();
+  const { toast } = useToast();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -50,9 +52,26 @@ export default function Navbar() {
   };
 
   const handleShare = async () => {
-    const shared = await shareApp();
-    if (shared) {
+    const result = await shareApp();
+    if (result.success) {
       setInstallDialogOpen(false);
+      if (result.method === 'clipboard') {
+        toast({
+          title: "Link copied!",
+          description: "The app link has been copied to your clipboard.",
+        });
+      } else {
+        toast({
+          title: "Shared successfully!",
+          description: "Thanks for sharing Orient!",
+        });
+      }
+    } else if (!result.cancelled) {
+      toast({
+        title: "Unable to share",
+        description: "Please copy the URL from your browser and share it manually.",
+        variant: "destructive",
+      });
     }
   };
 
