@@ -89,34 +89,7 @@ export default function Navbar() {
             </div>
           </Link>
 
-          <div className="hidden md:flex flex-1 max-w-lg mx-8">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search products, vendors..."
-                className="w-full px-4 py-2 pl-10 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                data-testid="input-search"
-              />
-              <svg
-                className="absolute left-3 top-2.5 w-5 h-5 text-muted-foreground"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 md:space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4 ml-auto">
             {isAuthenticated && (
               <>
                 <Link href="/wishlist">
@@ -199,81 +172,32 @@ export default function Navbar() {
           </div>
         </div>
 
-        <div className="md:hidden pb-3">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search products..."
-              className="w-full px-4 py-2 pl-10 bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              data-testid="input-search-mobile"
-            />
-            <svg
-              className="absolute left-3 top-2.5 w-5 h-5 text-muted-foreground"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {mobileMenuOpen && (
+        {mobileMenuOpen && isAuthenticated && (
           <div className="md:hidden border-t border-border py-4 space-y-2">
-            {isAuthenticated ? (
-              <>
-                {user?.role === "vendor" && (
-                  <Link href="/vendor-dashboard">
-                    <Button variant="ghost" className="w-full justify-start" data-testid="link-vendor-dashboard-mobile">
-                      <Store className="w-5 h-5 mr-2" />
-                      Dashboard
-                    </Button>
-                  </Link>
-                )}
-                {user?.role === "admin" && (
-                  <Link href="/admin-dashboard">
-                    <Button variant="ghost" className="w-full justify-start" data-testid="link-admin-dashboard-mobile">
-                      <Shield className="w-5 h-5 mr-2" />
-                      Admin
-                    </Button>
-                  </Link>
-                )}
-                <Button
-                  onClick={() => (window.location.href = "/api/logout")}
-                  variant="ghost"
-                  className="w-full justify-start"
-                  data-testid="button-logout-mobile"
-                >
-                  Logout
+            {user?.role === "vendor" && (
+              <Link href="/vendor-dashboard">
+                <Button variant="ghost" className="w-full justify-start" data-testid="link-vendor-dashboard-mobile">
+                  <Store className="w-5 h-5 mr-2" />
+                  Dashboard
                 </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  onClick={() => (window.location.href = "/api/login")}
-                  variant="ghost"
-                  className="w-full justify-start"
-                  data-testid="button-login-mobile"
-                >
-                  Login
-                </Button>
-                <Button
-                  onClick={() => (window.location.href = "/api/login")}
-                  className="w-full"
-                  data-testid="button-become-vendor-mobile"
-                >
-                  Become a Vendor
-                </Button>
-              </>
+              </Link>
             )}
+            {user?.role === "admin" && (
+              <Link href="/admin-dashboard">
+                <Button variant="ghost" className="w-full justify-start" data-testid="link-admin-dashboard-mobile">
+                  <Shield className="w-5 h-5 mr-2" />
+                  Admin
+                </Button>
+              </Link>
+            )}
+            <Button
+              onClick={() => (window.location.href = "/api/logout")}
+              variant="ghost"
+              className="w-full justify-start"
+              data-testid="button-logout-mobile"
+            >
+              Logout
+            </Button>
           </div>
         )}
       </div>
