@@ -2,16 +2,42 @@ import { Link } from "wouter";
 import { Store, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import heroImage from "@assets/stock_images/agricultural_field_c_5d66ae93.jpg";
+import vegetablesImage from "@assets/stock_images/fresh_vegetables_har_b2005c0c.jpg";
+import fruitsImage from "@assets/stock_images/fresh_fruits_harvest_6a417577.jpg";
 
 export default function RoleSelection() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5">
-      <div className="max-w-4xl w-full space-y-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl font-bold text-primary">Orient</h1>
-          <p className="text-xl text-muted-foreground">
+    <div className="min-h-screen bg-background">
+      <div 
+        className="relative h-72 bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
+        <div className="relative h-full flex flex-col items-center justify-center text-white px-4">
+          <h1 className="text-5xl md:text-6xl font-bold mb-4" data-testid="text-app-title">Orient</h1>
+          <p className="text-xl md:text-2xl text-white/90">
             Connecting Farmers with Buyers
           </p>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-12 space-y-12">
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="rounded-lg overflow-hidden shadow-md">
+            <img 
+              src={vegetablesImage} 
+              alt="Fresh vegetables" 
+              className="w-full h-48 object-cover"
+            />
+          </div>
+          <div className="rounded-lg overflow-hidden shadow-md">
+            <img 
+              src={fruitsImage} 
+              alt="Fresh fruits" 
+              className="w-full h-48 object-cover"
+            />
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
