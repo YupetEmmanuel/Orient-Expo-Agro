@@ -13,7 +13,7 @@ import {
   type InsertAnswer,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, like, or, and, SQL } from "drizzle-orm";
+import { eq, desc, like, or, and, SQL, ilike, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Listing operations
@@ -203,15 +203,15 @@ export class DatabaseStorage implements IStorage {
       return await this.getAllQuestions();
     }
 
-    // Build search conditions for each keyword
-    const searchConditions = keywords.map(keyword => 
-      or(
-        like(questions.title, `%${keyword}%`),
-        like(questions.body, `%${keyword}%`)
-      )
-    );
+    // Build search conditions for each keyword using ilike for case-insensitive search
+    // Create an array of all conditions (title OR body for each keyword)
+    const searchConditions: any[] = [];
+    for (const keyword of keywords) {
+      searchConditions.push(ilike(questions.title, `%${keyword}%`));
+      searchConditions.push(ilike(questions.body, `%${keyword}%`));
+    }
 
-    // Combine all conditions with OR - match any keyword
+    // Combine all conditions with OR - match any keyword in either title or body
     return await db
       .select()
       .from(questions)
