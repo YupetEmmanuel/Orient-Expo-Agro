@@ -185,32 +185,21 @@ export default function Navbar() {
               variant="ghost"
               size="sm"
               onClick={() => setInstallDialogOpen(true)}
-              className="hidden md:flex items-center space-x-1"
+              className="flex items-center space-x-1"
               data-testid={isInstalled ? "button-share-app" : "button-download-app"}
             >
               {isInstalled ? (
                 <>
                   <Share2 className="w-4 h-4" />
-                  <span>Share</span>
+                  <span className="hidden sm:inline">Share</span>
                 </>
               ) : (
                 <>
                   <Download className="w-4 h-4" />
-                  <span>Download</span>
+                  <span className="hidden sm:inline">Download</span>
                 </>
               )}
             </Button>
-            <button
-              onClick={() => setInstallDialogOpen(true)}
-              className="md:hidden p-2 hover:bg-muted rounded-lg"
-              data-testid={isInstalled ? "button-share-app-mobile" : "button-download-app-mobile"}
-            >
-              {isInstalled ? (
-                <Share2 className="w-5 h-5" />
-              ) : (
-                <Download className="w-5 h-5" />
-              )}
-            </button>
             <button
               className="md:hidden p-2 hover:bg-muted rounded-lg"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
