@@ -7,7 +7,7 @@ import {
   type InsertCropInfo,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, like, or } from "drizzle-orm";
+import { eq, desc, like, or, and, SQL } from "drizzle-orm";
 
 export interface IStorage {
   // Listing operations
@@ -51,24 +51,30 @@ export class DatabaseStorage implements IStorage {
     cropType?: string;
     search?: string;
   }): Promise<Listing[]> {
-    let query = db.select().from(listings);
+    const conditions: SQL[] = [];
 
     if (filters?.role) {
-      query = query.where(eq(listings.role, filters.role)) as any;
+      conditions.push(eq(listings.role, filters.role));
     }
 
     if (filters?.cropType) {
-      query = query.where(eq(listings.cropType, filters.cropType)) as any;
+      conditions.push(eq(listings.cropType, filters.cropType));
     }
 
     if (filters?.search) {
-      query = query.where(
+      conditions.push(
         or(
           like(listings.itemName, `%${filters.search}%`),
           like(listings.description, `%${filters.search}%`),
           like(listings.vendorName, `%${filters.search}%`)
-        )
-      ) as any;
+        )!
+      );
+    }
+
+    let query = db.select().from(listings);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)!) as any;
     }
 
     const results = await query.orderBy(desc(listings.createdAt));

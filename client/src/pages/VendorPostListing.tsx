@@ -37,11 +37,8 @@ export default function VendorPostListing() {
 
   const createListingMutation = useMutation({
     mutationFn: async (data: InsertListing) => {
-      return await apiRequest("/api/listings", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await apiRequest("POST", "/api/listings", data);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/listings"] });

@@ -10,10 +10,20 @@ import { useState } from "react";
 
 export default function BuyerBrowse() {
   const [search, setSearch] = useState("");
-  const [cropType, setCropType] = useState<string>("");
+  const [cropType, setCropType] = useState<string>("all");
 
   const { data: listings, isLoading } = useQuery<Listing[]>({
-    queryKey: ["/api/listings", { role: "vendor", cropType, search }],
+    queryKey: ["/api/listings", { role: "vendor", cropType: cropType === "all" ? undefined : cropType, search: search || undefined }],
+    queryFn: async ({ queryKey }) => {
+      const [url, params] = queryKey as [string, { role?: string; cropType?: string; search?: string }];
+      const searchParams = new URLSearchParams();
+      if (params.role) searchParams.append("role", params.role);
+      if (params.cropType) searchParams.append("cropType", params.cropType);
+      if (params.search) searchParams.append("search", params.search);
+      const res = await fetch(`${url}?${searchParams.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch listings");
+      return res.json();
+    },
   });
 
   const filteredListings = listings || [];
@@ -53,7 +63,7 @@ export default function BuyerBrowse() {
               <SelectValue placeholder="All crop types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All crop types</SelectItem>
+              <SelectItem value="all">All crop types</SelectItem>
               <SelectItem value="vegetables">Vegetables</SelectItem>
               <SelectItem value="fruits">Fruits</SelectItem>
               <SelectItem value="grains">Grains</SelectItem>
