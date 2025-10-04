@@ -117,7 +117,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-2 md:space-x-4">
-            {isAuthenticated ? (
+            {isAuthenticated && (
               <>
                 <Link href="/wishlist">
                   <Button
@@ -160,24 +160,6 @@ export default function Navbar() {
                   data-testid="button-logout"
                 >
                   Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  onClick={() => (window.location.href = "/api/login")}
-                  variant="ghost"
-                  className="hidden md:flex"
-                  data-testid="button-login"
-                >
-                  Login
-                </Button>
-                <Button
-                  onClick={() => (window.location.href = "/api/login")}
-                  className="hidden md:block"
-                  data-testid="button-become-vendor"
-                >
-                  Become a Vendor
                 </Button>
               </>
             )}
