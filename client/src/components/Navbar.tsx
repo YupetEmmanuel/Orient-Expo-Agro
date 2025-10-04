@@ -53,28 +53,15 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-3" data-testid="link-home">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <Home className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-primary">Orient</h1>
-                <p className="text-xs text-muted-foreground">Vendor Marketplace</p>
-              </div>
-            </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setInstallDialogOpen(true)}
-              className="flex items-center space-x-1 text-sm"
-              data-testid="button-download-app"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Download App</span>
-              <span className="sm:hidden">Download</span>
-            </Button>
-          </div>
+          <Link href="/" className="flex items-center space-x-3" data-testid="link-home">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+              <Home className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-primary">Orient</h1>
+              <p className="text-xs text-muted-foreground">Vendor Marketplace</p>
+            </div>
+          </Link>
 
           <div className="hidden md:flex flex-1 max-w-lg mx-8">
             <div className="relative w-full">
@@ -103,7 +90,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             {isAuthenticated ? (
               <>
                 <Link href="/wishlist">
@@ -168,6 +155,23 @@ export default function Navbar() {
                 </Button>
               </>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setInstallDialogOpen(true)}
+              className="hidden md:flex items-center space-x-1"
+              data-testid="button-download-app"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download</span>
+            </Button>
+            <button
+              onClick={() => setInstallDialogOpen(true)}
+              className="md:hidden p-2 hover:bg-muted rounded-lg"
+              data-testid="button-download-app-mobile"
+            >
+              <Download className="w-5 h-5" />
+            </button>
             <button
               className="md:hidden p-2 hover:bg-muted rounded-lg"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
