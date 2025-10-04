@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Store, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Navbar from "@/components/Navbar";
 import heroImage from "@assets/stock_images/agricultural_field_c_5d66ae93.jpg";
 import vegetablesImage from "@assets/stock_images/fresh_vegetables_har_b2005c0c.jpg";
 import farmlandImage from "@assets/stock_images/pexels_farm_image.jpg";
@@ -9,6 +10,7 @@ import farmlandImage from "@assets/stock_images/pexels_farm_image.jpg";
 export default function RoleSelection() {
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div 
         className="relative h-72 bg-cover bg-center"
         style={{ backgroundImage: `url(${heroImage})` }}
